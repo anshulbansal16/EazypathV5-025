@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Bot, X, Send, Minimize2, Maximize2 } from "lucide-react"
-import { getHealthAssistantResponse } from "@/lib/grok"
 
 export function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false)
@@ -40,8 +39,16 @@ export function AIAssistant() {
     setIsLoading(true)
 
     try {
-      const response = await getHealthAssistantResponse(userMessage)
-      setMessages((prev) => [...prev, { role: "assistant", content: response }])
+      const response = await fetch("/api/health-assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: [
+          ...messages,
+          { role: "user", content: userMessage }
+        ] })
+      })
+      const data = await response.json()
+      setMessages((prev) => [...prev, { role: "assistant", content: data.content || "Sorry, I couldn't get a response." }])
     } catch (error) {
       console.error("Error getting response:", error)
       setMessages((prev) => [
